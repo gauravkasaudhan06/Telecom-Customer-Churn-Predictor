@@ -446,43 +446,48 @@ with tab2:
                 </div>
             """, unsafe_allow_html=True)
             
-        # --- CHARTS ROW 1 (DONUTS) ---
-        col_c1, col_c2 = st.columns(2)
-        
-        with col_c1:
-            fig_churn = px.pie(filtered_df, names='Churn_Label', title='Customer Churn Breakdown', 
-                               hole=0.6, color='Churn_Label', color_discrete_map={'No':'#10B981', 'Yes':'#EF4444'})
-            fig_churn.update_traces(textposition='inside', textinfo='percent+label')
-            fig_churn.update_layout(margin=dict(t=40, b=0, l=0, r=0), paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', font=dict(color='#F9FAFB'))
-            st.plotly_chart(fig_churn, use_container_width=True)
+        # --- CHARTS SECTION ---
+        if total_customers > 0:
+            # --- CHARTS ROW 1 (DONUTS) ---
+            col_c1, col_c2 = st.columns(2)
             
-        with col_c2:
-            fig_contract = px.pie(filtered_df, names='Contract', title='Customers by Contract Type', 
-                               hole=0.4, color_discrete_sequence=px.colors.qualitative.Pastel)
-            fig_contract.update_traces(textposition='inside', textinfo='percent+label')
-            fig_contract.update_layout(margin=dict(t=40, b=0, l=0, r=0), paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', font=dict(color='#F9FAFB'))
-            st.plotly_chart(fig_contract, use_container_width=True)
+            with col_c1:
+                fig_churn = px.pie(filtered_df, names='Churn_Label', title='Customer Churn Breakdown', 
+                                   hole=0.6, color='Churn_Label', color_discrete_map={'No':'#10B981', 'Yes':'#EF4444'})
+                fig_churn.update_traces(textposition='inside', textinfo='percent+label')
+                fig_churn.update_layout(margin=dict(t=40, b=0, l=0, r=0), paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', font=dict(color='#F9FAFB'))
+                st.plotly_chart(fig_churn, use_container_width=True)
+                
+            with col_c2:
+                fig_contract = px.pie(filtered_df, names='Contract', title='Customers by Contract Type', 
+                                   hole=0.4, color_discrete_sequence=px.colors.qualitative.Pastel)
+                fig_contract.update_traces(textposition='inside', textinfo='percent+label')
+                fig_contract.update_layout(margin=dict(t=40, b=0, l=0, r=0), paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', font=dict(color='#F9FAFB'))
+                st.plotly_chart(fig_contract, use_container_width=True)
+                
+            # --- CHARTS ROW 2 (BAR & BOX) ---
+            col_c3, col_c4 = st.columns(2)
             
-        # --- CHARTS ROW 2 (BAR & BOX) ---
-        col_c3, col_c4 = st.columns(2)
-        
-        with col_c3:
-            # Create Tenure Groups
-            bins = [0, 12, 24, 48, 60, 100]
-            labels = ['0-1 Year', '1-2 Years', '2-4 Years', '4-5 Years', '5+ Years']
-            filtered_df['Tenure_Group'] = pd.cut(filtered_df['tenure'], bins=bins, labels=labels, right=False)
-            
-            tenure_churn = filtered_df.groupby(['Tenure_Group', 'Churn_Label'], observed=False).size().reset_index(name='Count')
-            fig_tenure = px.bar(tenure_churn, x='Tenure_Group', y='Count', color='Churn_Label', barmode='group',
-                                title='Churn by Tenure Group', color_discrete_map={'No':'#10B981', 'Yes':'#EF4444'})
-            fig_tenure.update_layout(paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', font=dict(color='#F9FAFB'))
-            st.plotly_chart(fig_tenure, use_container_width=True)
-            
-        with col_c4:
-            fig_box = px.box(filtered_df, x='Churn_Label', y='MonthlyCharges', color='Churn_Label',
-                             title='Monthly Charges Impact on Churn', color_discrete_map={'No':'#10B981', 'Yes':'#EF4444'})
-            fig_box.update_layout(paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', font=dict(color='#F9FAFB'))
-            st.plotly_chart(fig_box, use_container_width=True)
+            with col_c3:
+                # Create Tenure Groups
+                bins = [0, 12, 24, 48, 60, 100]
+                labels = ['0-1 Year', '1-2 Years', '2-4 Years', '4-5 Years', '5+ Years']
+                filtered_df['Tenure_Group'] = pd.cut(filtered_df['tenure'], bins=bins, labels=labels, right=False)
+                
+                # Use observed=True to prevent IndexError on empty categories in some pandas versions
+                tenure_churn = filtered_df.groupby(['Tenure_Group', 'Churn_Label'], observed=True).size().reset_index(name='Count')
+                fig_tenure = px.bar(tenure_churn, x='Tenure_Group', y='Count', color='Churn_Label', barmode='group',
+                                    title='Churn by Tenure Group', color_discrete_map={'No':'#10B981', 'Yes':'#EF4444'})
+                fig_tenure.update_layout(paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', font=dict(color='#F9FAFB'))
+                st.plotly_chart(fig_tenure, use_container_width=True)
+                
+            with col_c4:
+                fig_box = px.box(filtered_df, x='Churn_Label', y='MonthlyCharges', color='Churn_Label',
+                                 title='Monthly Charges Impact on Churn', color_discrete_map={'No':'#10B981', 'Yes':'#EF4444'})
+                fig_box.update_layout(paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', font=dict(color='#F9FAFB'))
+                st.plotly_chart(fig_box, use_container_width=True)
+        else:
+            st.info("💡 No customers match the selected filters. Please adjust your slicers.")
 
     else:
         st.warning("No data found. Please run setup_database.py first.")
