@@ -36,14 +36,15 @@ def clean_data(df: pd.DataFrame) -> pd.DataFrame:
         if col in df.columns:
             df[col] = df[col].replace({'No internet service': 'No'})
             
-    # 4. Convert Yes/No to 1/0
+    # 4. Convert Yes/No to 1/0 and ensure they are integers
+    yes_no_mapping = {'Yes': 1, 'No': 0, 1: 1, 0: 0}
     yes_no_columns = ['Partner', 'Dependents', 'PhoneService', 'MultipleLines', 
                       'OnlineSecurity', 'OnlineBackup', 'DeviceProtection', 
                       'TechSupport', 'StreamingTV', 'StreamingMovies', 'PaperlessBilling', 'Churn']
                       
     for col in yes_no_columns:
         if col in df.columns:
-            df[col] = df[col].replace({'Yes': 1, 'No': 0})
+            df[col] = df[col].map(yes_no_mapping).fillna(0).astype(int)
             
     # 5. Convert gender to 1/0 (Female: 1, Male: 0)
     if 'gender' in df.columns:
